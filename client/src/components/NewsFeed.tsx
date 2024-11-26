@@ -12,7 +12,19 @@ function NewsList() {
   });
 
   if (error) {
-    throw error;
+    return (
+      <Card className="p-4">
+        <p className="text-sm text-destructive">Failed to load news. Please try again later.</p>
+      </Card>
+    );
+  }
+
+  if (!isLoading && (!news || news.length === 0)) {
+    return (
+      <Card className="p-4">
+        <p className="text-sm text-muted-foreground">No news available at the moment.</p>
+      </Card>
+    );
   }
 
   return (
@@ -25,9 +37,11 @@ function NewsList() {
             <div className="h-4 bg-muted rounded w-1/4" />
           </Card>
         ))
-      ) : news?.map((item) => (
-        <NewsCard key={item.url} news={item} />
-      ))}
+      ) : (
+        news.map((item) => (
+          <NewsCard key={item.url} news={item} />
+        ))
+      )}
     </div>
   );
 }

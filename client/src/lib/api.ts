@@ -76,16 +76,33 @@ export async function addWallet(wallet: { walletAddress: string; chain: string }
 }
 
 export async function fetchNews() {
-  const response = await fetch(
-    "https://api.coingecko.com/api/v3/news"
-  );
-  const data = await response.json();
-  return data.map((item: any) => ({
-    title: item.title,
-    description: item.description || item.text,
-    url: item.url,
-    source: item.source,
-    categories: item.categories || [],
-    publishedAt: item.published_at
-  }));
+  try {
+    const response = await fetch(
+      "https://api.coingecko.com/api/v3/news"
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch news');
+    }
+
+    const data = await response.json();
+    
+    // Check if data is an array
+    if (!Array.isArray(data)) {
+      console.warn('News API did not return an array');
+      return [];
+    }
+
+    return data.map((item: any) => ({
+      title: item.title || '',
+      description: item.description || item.text || '',
+      url: item.url || '',
+      source: item.source || 'Unknown',
+      categories: Array.isArray(item.categories) ? item.categories : [],
+      publishedAt: item.published_at || new Date().toISOString()
+    }));
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    return [];
+  }
 }

@@ -34,7 +34,7 @@ const BLOCKCHAIN_OPTIONS = [
   { label: "Ethereum", value: "ethereum" },
   { label: "Solana", value: "solana" },
   { label: "Avalanche", value: "avalanche" },
-  { label: "XRP", value: "xrp" }
+  { label: "BSC", value: "bsc" }
 ];
 
 export default function Portfolio() {

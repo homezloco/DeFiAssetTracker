@@ -1,14 +1,14 @@
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
 type ChainIdentifiers = {
-  [key in 'ethereum' | 'solana' | 'avalanche' | 'xrp']: string[];
+  [key in 'ethereum' | 'solana' | 'avalanche' | 'bsc']: string[];
 };
 
 const SUPPORTED_CHAINS: ChainIdentifiers = {
   ethereum: ['ethereum', 'eth'],
   solana: ['solana', 'sol'],
   avalanche: ['avalanche-2', 'avax'],
-  xrp: ['ripple', 'xrp']
+  bsc: ['binancecoin', 'bnb']
 };
 
 export async function fetchTopAssets() {
@@ -81,7 +81,7 @@ let lastFetchTime = 0;
 export async function fetchNews() {
   try {
     const response = await fetch(
-      `${COINGECKO_API}/news`,
+      'https://api.coingecko.com/api/v3/status_updates',
       {
         headers: {
           'Accept': 'application/json',
@@ -96,24 +96,22 @@ export async function fetchNews() {
 
     const data = await response.json();
     
-    // Return empty array if data is invalid to prevent errors
-    if (!Array.isArray(data)) {
-      console.warn('Invalid news data format');
+    if (!data.status_updates) {
       return [];
     }
 
-    return data
+    return data.status_updates
       .map((item: any) => ({
-        title: item.title || 'No title',
-        description: item.description || 'No description available',
-        url: item.url || '#',
-        source: item.source || 'Unknown Source',
-        categories: Array.isArray(item.categories) ? item.categories : [],
+        title: item.description || 'No title',
+        description: item.project.description || 'No description available',
+        url: item.project.link || '#',
+        source: item.project.name || 'Unknown Source',
+        categories: [item.category] || [],
         publishedAt: item.created_at || new Date().toISOString()
       }))
       .slice(0, 10);
   } catch (error) {
     console.error('Error fetching news:', error);
-    return []; // Return empty array instead of throwing
+    return [];
   }
 }

@@ -47,7 +47,7 @@ export async function fetchPortfolio() {
   return response.json();
 }
 
-export async function addAsset(asset: { assetId: string; amount: number }) {
+export async function addAsset(asset: { assetId: string; amount: number; blockchain: string }) {
   const response = await fetch("/api/portfolio/assets", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

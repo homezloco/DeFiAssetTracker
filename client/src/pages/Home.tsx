@@ -3,9 +3,10 @@ import { fetchTopAssets } from "@/lib/api";
 import AssetCard from "@/components/AssetCard";
 import TrendingAssets from "@/components/TrendingAssets";
 import { Card } from "@/components/ui/card";
+import type { Asset } from "@/types/asset";
 
 export default function Home() {
-  const { data: assets, isLoading } = useQuery({
+  const { data: assets, isLoading } = useQuery<Asset[]>({
     queryKey: ["top-assets"],
     queryFn: fetchTopAssets,
     refetchInterval: 60000 // Refetch every minute

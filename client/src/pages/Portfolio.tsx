@@ -2,6 +2,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { fetchPortfolio, addAsset } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Portfolio, PortfolioAsset } from "@/types/asset";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -31,7 +33,7 @@ export default function Portfolio() {
   const { toast } = useToast();
   const form = useForm<FormData>();
   
-  const { data: portfolio, isLoading } = useQuery({
+  const { data: portfolio, isLoading } = useQuery<Portfolio>({
     queryKey: ["portfolio"],
     queryFn: fetchPortfolio
   });
@@ -75,6 +77,32 @@ export default function Portfolio() {
                     <FormControl>
                       <Input {...field} type="number" step="0.000001" />
                     </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="blockchain"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Blockchain</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select blockchain" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {BLOCKCHAIN_OPTIONS.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormItem>
                 )}
               />

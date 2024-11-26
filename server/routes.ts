@@ -21,7 +21,7 @@ export function registerRoutes(app: Express) {
   // Add asset to portfolio
   app.post("/api/portfolio/assets", async (req, res) => {
     try {
-      const { assetId, amount } = req.body;
+      const { assetId, amount, blockchain } = req.body;
       
       // Get or create default portfolio
       let portfolio = await db.query.portfolios.findFirst();
@@ -35,6 +35,7 @@ export function registerRoutes(app: Express) {
         .values({
           portfolioId: portfolio.id,
           assetId,
+          blockchain,
           amount: amount.toString(), // Convert to string for decimal type
           purchasePrice: "0", // Would normally fetch current price
         })

@@ -83,17 +83,17 @@ function Router() {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
       <WagmiConfig config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
+        <ErrorBoundary>
           <Router />
-        </QueryClientProvider>
+        </ErrorBoundary>
       </WagmiConfig>
       <Web3Modal
         projectId={import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || ''}
         ethereumClient={ethereumClient}
         themeMode="dark"
       />
-    </ErrorBoundary>
+    </QueryClientProvider>
   </StrictMode>,
 );

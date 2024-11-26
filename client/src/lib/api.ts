@@ -74,3 +74,18 @@ export async function addWallet(wallet: { walletAddress: string; chain: string }
   });
   return response.json();
 }
+
+export async function fetchNews() {
+  const response = await fetch(
+    "https://api.coingecko.com/api/v3/news"
+  );
+  const data = await response.json();
+  return data.map((item: any) => ({
+    title: item.title,
+    description: item.description || item.text,
+    url: item.url,
+    source: item.source,
+    categories: item.categories || [],
+    publishedAt: item.published_at
+  }));
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +27,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const { login, register } = useUser();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const form = useForm<AuthFormData>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -49,6 +51,7 @@ export default function AuthPage() {
         title: "Success",
         description: `Successfully ${isLogin ? "logged in" : "registered"}!`,
       });
+      setLocation("/portfolio");
     } catch (error) {
       toast({
         title: "Error",

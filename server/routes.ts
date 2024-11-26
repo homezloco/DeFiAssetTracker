@@ -2,7 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { portfolios, assets, type Portfolio, type Asset } from "@db/schema";
 
-type PortfolioWithAssets = Portfolio & {
+type JoinedPortfolio = {
+  portfolio: Portfolio;
   assets: Asset[];
 };
 import { eq, and } from "drizzle-orm";
@@ -23,11 +24,19 @@ export function registerRoutes(app: Express) {
   app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
     try {
       console.log("Fetching portfolio data...");
-      const portfolioData = await db.select().from(portfolios)
+      const portfolioData = await db.select()
+        .from(portfolios)
         .where(eq(portfolios.userId, req.user!.id))
-        .leftJoin(assets, eq(assets.portfolioId, portfolios.id));
+        .leftJoin(assets, eq(assets.portfolioId, portfolios.id))
+        .then((result) => {
+          if (!result.length) return null;
+          return {
+            ...result[0].portfolios,
+            assets: result.map(r => r.assets).filter(Boolean)
+          };
+        });
 
-      if (!portfolioData || portfolioData.length === 0) {
+      if (!portfolioData) {
         console.log("No portfolio found, creating default...");
         const [newPortfolio] = await db.insert(portfolios)
           .values({ 

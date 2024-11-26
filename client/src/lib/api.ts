@@ -1,6 +1,10 @@
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
-const SUPPORTED_CHAINS = {
+type ChainIdentifiers = {
+  [key in 'ethereum' | 'solana' | 'avalanche' | 'bsc']: string[];
+};
+
+const SUPPORTED_CHAINS: ChainIdentifiers = {
   ethereum: ['ethereum', 'eth'],
   solana: ['solana', 'sol'],
   avalanche: ['avalanche-2', 'avax'],
@@ -29,9 +33,12 @@ export async function fetchTopAssets() {
       };
     })
     .filter((asset: any) => 
-      Object.values(SUPPORTED_CHAINS).flat().some(id => 
-        asset.id === id || asset.id.startsWith(Object.keys(SUPPORTED_CHAINS).find(k => SUPPORTED_CHAINS[k].includes(id)) || '')
-      )
+      Object.values(SUPPORTED_CHAINS).flat().some(id => {
+        const chainKey = Object.keys(SUPPORTED_CHAINS).find(k => 
+          SUPPORTED_CHAINS[k as keyof ChainIdentifiers].includes(id)
+        ) as keyof ChainIdentifiers | undefined;
+        return asset.id === id || (chainKey && asset.id.startsWith(chainKey));
+      })
     )
     .slice(0, 20);
 }

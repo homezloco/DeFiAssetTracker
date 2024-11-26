@@ -38,7 +38,7 @@ function ProtectedRoute({ component: Component }: ProtectedRouteProps) {
     if (!isLoading && !user) {
       setLocation("/auth");
     } else if (!isLoading && user) {
-      // Ensure we're on the correct route when authenticated
+      // Only redirect from auth page when logged in
       if (window.location.pathname === "/auth") {
         setLocation("/portfolio");
       }
@@ -88,12 +88,12 @@ createRoot(document.getElementById("root")!).render(
         <ErrorBoundary>
           <Router />
         </ErrorBoundary>
+        <Web3Modal
+          projectId={import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || ''}
+          ethereumClient={ethereumClient}
+          themeMode="dark"
+        />
       </WagmiConfig>
-      <Web3Modal
-        projectId={import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || ''}
-        ethereumClient={ethereumClient}
-        themeMode="dark"
-      />
     </QueryClientProvider>
   </StrictMode>,
 );

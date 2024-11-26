@@ -3,8 +3,9 @@ import { type Express } from "express";
 import { db } from "../db";
 import { portfolios, assets, wallets } from "@db/schema";
 import { eq } from "drizzle-orm";
-import { providers } from "ethers";
+import { ethers } from "ethers";
 import { Connection, PublicKey } from "@solana/web3.js";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { z } from "zod";
 import retry from "async-retry";
 
@@ -26,16 +27,44 @@ async function getEthereumBalance(address: string): Promise<WalletBalanceType> {
   return await retry(
     async () => {
       try {
-        const provider = new providers.JsonRpcProvider(
+        const provider = new ethers.JsonRpcProvider(
           'https://eth-mainnet.g.alchemy.com/v2/demo'
         );
         const balance = await provider.getBalance(address);
         
+        // Get ERC20 token balances for common tokens
+        const tokenContracts = [
+          { address: '0xdac17f958d2ee523a2206206994597c13d831ec7', symbol: 'USDT' }, // USDT
+          { address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', symbol: 'USDC' }, // USDC
+          { address: '0x6b175474e89094c44da98b954eedeac495271d0f', symbol: 'DAI' }  // DAI
+        ];
+
+        const tokenBalances = await Promise.allSettled(
+          tokenContracts.map(async (token) => {
+            const contract = new ethers.Contract(
+              token.address,
+              ['function balanceOf(address) view returns (uint256)'],
+              provider
+            );
+            const tokenBalance = await contract.balanceOf(address);
+            return {
+              symbol: token.symbol,
+              balance: ethers.formatEther(tokenBalance)
+            };
+          })
+        );
+
+        const validTokenBalances = tokenBalances
+          .filter((result): result is PromiseFulfilledResult<{ symbol: string; balance: string }> => 
+            result.status === 'fulfilled' && Number(result.value.balance) > 0
+          )
+          .map(result => result.value);
+
         return {
           address,
           chain: 'ethereum',
-          balance: providers.formatEther(balance),
-          tokenBalances: [] // Token balances would be added here
+          balance: ethers.formatEther(balance),
+          tokenBalances: validTokenBalances
         };
       } catch (error) {
         console.error('Error fetching ETH balance:', error);
@@ -59,11 +88,41 @@ async function getSolanaBalance(address: string): Promise<WalletBalanceType> {
         const publicKey = new PublicKey(address);
         const balance = await connection.getBalance(publicKey);
         
+        // Get token accounts
+        const tokenAccounts = await connection.getTokenAccountsByOwner(publicKey, {
+          programId: TOKEN_PROGRAM_ID
+        });
+
+        const tokenBalances = await Promise.allSettled(
+          tokenAccounts.value.map(async (tokenAccount) => {
+            try {
+              const accountInfo = await connection.getParsedAccountInfo(tokenAccount.pubkey);
+              const parsedData = (accountInfo.value?.data as any)?.parsed;
+              if (parsedData?.info?.tokenAmount?.uiAmount > 0) {
+                return {
+                  symbol: parsedData.info.mint, // We could add token metadata resolution here
+                  balance: parsedData.info.tokenAmount.uiAmount.toString()
+                };
+              }
+              return null;
+            } catch (error) {
+              console.error('Error fetching token info:', error);
+              return null;
+            }
+          })
+        );
+
+        const validTokenBalances = tokenBalances
+          .filter((result): result is PromiseFulfilledResult<{ symbol: string; balance: string } | null> => 
+            result.status === 'fulfilled' && result.value !== null
+          )
+          .map(result => result.value!);
+
         return {
           address,
           chain: 'solana',
           balance: (balance / 1e9).toString(),
-          tokenBalances: [] // Token balances would be added here
+          tokenBalances: validTokenBalances
         };
       } catch (error) {
         console.error('Error fetching SOL balance:', error);

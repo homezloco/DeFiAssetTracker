@@ -45,9 +45,17 @@ export async function fetchTopAssets() {
 }
 
 export async function fetchTrendingAssets() {
-  const response = await fetch(`${COINGECKO_API}/search/trending`);
-  const data = await response.json();
-  return data.coins;
+  try {
+    const response = await fetch(`${COINGECKO_API}/search/trending`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trending: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data?.coins || [];
+  } catch (error) {
+    console.error('Error fetching trending:', error);
+    return [];
+  }
 }
 
 export async function fetchPortfolio() {
@@ -81,6 +89,7 @@ let lastFetchTime = 0;
 
 export async function fetchNews() {
   try {
+    // Try status updates first
     const response = await fetch(
       `${COINGECKO_API}/status_updates`,
       {
@@ -92,27 +101,40 @@ export async function fetchNews() {
     );
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch news: ${response.statusText}`);
+      throw new Error('Status updates unavailable');
     }
 
     const data = await response.json();
     
-    if (!data.status_updates) {
-      return [];
+    if (!data.status_updates?.length) {
+      throw new Error('No status updates');
     }
 
     return data.status_updates
       .map((item: any) => ({
-        title: item.project ? item.project.name : 'Cryptocurrency Update',
+        title: item.project?.name || 'Cryptocurrency Update',
         description: item.description,
         url: item.project ? `https://www.coingecko.com/en/coins/${item.project.id}` : '#',
         source: item.user || 'CoinGecko',
-        categories: item.category ? [item.category] : ['Update'],
-        publishedAt: item.created_at
+        categories: [item.category || 'Update'],
+        publishedAt: item.created_at || new Date().toISOString()
       }))
       .slice(0, 10);
   } catch (error) {
-    console.error('Error fetching news:', error);
-    return [];
+    // Fallback to trending coins as news
+    try {
+      const trending = await fetchTrendingAssets();
+      return trending.map((coin: any) => ({
+        title: `${coin.item.name} (${coin.item.symbol.toUpperCase()}) is Trending`,
+        description: `${coin.item.name} is currently trending with market cap rank #${coin.item.market_cap_rank}`,
+        url: `https://www.coingecko.com/en/coins/${coin.item.id}`,
+        source: 'CoinGecko Trending',
+        categories: ['Trending'],
+        publishedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      return [];
+    }
   }
 }

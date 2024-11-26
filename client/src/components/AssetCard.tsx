@@ -48,10 +48,10 @@ export default function AssetCard({ asset }: AssetCardProps) {
       <div className="mb-4">
         <p className="text-2xl font-bold">${asset.current_price.toLocaleString()}</p>
         <p className="text-sm text-muted-foreground">
-          Vol: ${new Intl.NumberFormat('en-US', {
+          Vol: ${asset.volume_24h ? new Intl.NumberFormat('en-US', {
             notation: 'compact',
             maximumFractionDigits: 2
-          }).format(asset.volume_24h)}
+          }).format(asset.volume_24h) : 'N/A'}
         </p>
       </div>
 

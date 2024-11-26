@@ -1,6 +1,10 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { portfolios, assets } from "@db/schema";
+import { portfolios, assets, type Portfolio, type Asset } from "@db/schema";
+
+type PortfolioWithAssets = Portfolio & {
+  assets: Asset[];
+};
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 
@@ -20,6 +24,7 @@ export function registerRoutes(app: Express) {
     try {
       console.log("Fetching portfolio data...");
       const portfolioData = await db.query.portfolios.findMany({
+        as: "PortfolioWithAssets",
         where: eq(portfolios.userId, req.user!.id),
         with: {
           assets: true

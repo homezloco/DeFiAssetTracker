@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Switch, Route, useLocation } from "wouter";
 import "./index.css";
@@ -16,15 +16,27 @@ import TopBar from "./components/TopBar";
 import { useUser } from "./hooks/use-user";
 import { Loader2 } from "lucide-react";
 
-function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+interface ProtectedRouteProps {
+  component: React.ComponentType;
+}
+
+function ProtectedRoute({ component: Component }: ProtectedRouteProps) {
   const { user, isLoading } = useUser();
   const [, setLocation] = useLocation();
+  
+  const handleRedirect = React.useCallback(() => {
+    try {
+      if (!isLoading && !user) {
+        setLocation("/auth");
+      }
+    } catch (error) {
+      console.error("Error during navigation:", error);
+    }
+  }, [isLoading, user, setLocation]);
 
   React.useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation("/auth");
-    }
-  }, [user, isLoading, setLocation]);
+    handleRedirect();
+  }, [handleRedirect]);
 
   if (isLoading) {
     return (

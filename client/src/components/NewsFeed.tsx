@@ -5,7 +5,7 @@ import NewsCard from "./NewsCard";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 function NewsList() {
-  const { data: news, isLoading, error } = useQuery({
+  const { data: news, isLoading, error, refetch } = useQuery({
     queryKey: ["crypto-news"],
     queryFn: fetchNews,
     refetchInterval: 300000 // 5 minutes
@@ -14,11 +14,11 @@ function NewsList() {
   if (error) {
     return (
       <Card className="p-4">
-        <p className="text-sm text-destructive">
-          Unable to load news feed at this time. 
+        <p className="text-sm text-destructive flex items-center gap-2">
+          <span>Unable to load news feed at this time.</span>
           <button 
             onClick={() => refetch()} 
-            className="ml-2 text-primary hover:underline"
+            className="text-primary hover:underline"
           >
             Retry
           </button>

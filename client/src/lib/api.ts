@@ -94,8 +94,11 @@ export async function fetchNews() {
     const data = await response.json();
     
     if (!Array.isArray(data)) {
-      console.warn('News API returned invalid format');
-      return [];
+      throw new Error('Invalid news data format');
+    }
+
+    if (data.length === 0) {
+      throw new Error('No news available');
     }
 
     return data.map((item: any) => ({
@@ -108,7 +111,6 @@ export async function fetchNews() {
     }));
   } catch (error) {
     console.error('Error fetching news:', error);
-    // Return empty array instead of throwing
-    return [];
+    throw error; // Let React Query handle the error
   }
 }

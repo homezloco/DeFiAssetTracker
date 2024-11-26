@@ -1,14 +1,14 @@
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
 type ChainIdentifiers = {
-  [key in 'ethereum' | 'solana' | 'avalanche' | 'bsc']: string[];
+  [key in 'ethereum' | 'solana' | 'avalanche' | 'xrp']: string[];
 };
 
 const SUPPORTED_CHAINS: ChainIdentifiers = {
   ethereum: ['ethereum', 'eth'],
   solana: ['solana', 'sol'],
   avalanche: ['avalanche-2', 'avax'],
-  bsc: ['binancecoin', 'bnb']
+  xrp: ['ripple', 'xrp']
 };
 
 export async function fetchTopAssets() {
@@ -79,16 +79,9 @@ const RETRY_AFTER = 60000; // 1 minute
 let lastFetchTime = 0;
 
 export async function fetchNews() {
-  const now = Date.now();
-  if (now - lastFetchTime < RETRY_AFTER) {
-    throw new Error('Rate limit exceeded. Please try again later.');
-  }
-  lastFetchTime = now;
-
   try {
-    // Use a different endpoint that's more reliable
     const response = await fetch(
-      "https://api.coingecko.com/api/v3/status_updates",
+      `${COINGECKO_API}/news`,
       {
         headers: {
           'Accept': 'application/json',
@@ -103,22 +96,24 @@ export async function fetchNews() {
 
     const data = await response.json();
     
-    if (!data.status_updates) {
-      throw new Error('Invalid news data format');
+    // Return empty array if data is invalid to prevent errors
+    if (!Array.isArray(data)) {
+      console.warn('Invalid news data format');
+      return [];
     }
 
-    return data.status_updates
+    return data
       .map((item: any) => ({
-        title: item.description || 'No title',
-        description: item.project.description || 'No description available',
-        url: item.project.link || '#',
-        source: item.project.name || 'Unknown Source',
-        categories: [item.category] || [],
+        title: item.title || 'No title',
+        description: item.description || 'No description available',
+        url: item.url || '#',
+        source: item.source || 'Unknown Source',
+        categories: Array.isArray(item.categories) ? item.categories : [],
         publishedAt: item.created_at || new Date().toISOString()
       }))
       .slice(0, 10);
   } catch (error) {
     console.error('Error fetching news:', error);
-    throw error;
+    return []; // Return empty array instead of throwing
   }
 }

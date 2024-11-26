@@ -34,6 +34,13 @@ declare global {
   }
 }
 
+// Middleware to ensure user is authenticated
+export function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).send("Authentication required");
+}
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const sessionSettings: session.SessionOptions = {

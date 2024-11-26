@@ -21,7 +21,7 @@ export default function TrendingAssets() {
           <div className="flex gap-2 flex-wrap">
             {isLoading ? (
               <p className="text-muted-foreground">Loading trending assets...</p>
-            ) : trending?.coins?.map((coin) => (
+            ) : trending?.coins?.map((coin: { item: { id: string; symbol: string; price_btc: number } }) => (
               <Badge key={coin.item.id} variant="secondary">
                 {coin.item.symbol.toUpperCase()} {coin.item.price_btc.toFixed(8)} BTC
               </Badge>

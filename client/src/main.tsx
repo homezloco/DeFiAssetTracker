@@ -6,6 +6,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { Web3Modal } from '@web3modal/react';
+import { WagmiConfig } from 'wagmi';
+import { wagmiConfig, ethereumClient } from './lib/wagmiConfig';
 import Home from "./pages/Home";
 import Portfolio from "./pages/Portfolio";
 import TopBar from "./components/TopBar";
@@ -29,9 +32,16 @@ function Router() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Router />
-      </QueryClientProvider>
+      <WagmiConfig config={wagmiConfig}>
+        <QueryClientProvider client={queryClient}>
+          <Router />
+        </QueryClientProvider>
+      </WagmiConfig>
+      <Web3Modal
+        projectId={import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || ''}
+        ethereumClient={ethereumClient}
+        themeMode="dark"
+      />
     </ErrorBoundary>
   </StrictMode>,
 );

@@ -1,12 +1,13 @@
 import { setupAuth, ensureAuthenticated } from "./auth";
 import { type Express } from "express";
 import { db } from "../db";
-import { portfolios, assets, wallets } from "@db/schema";
+import { portfolios, assets, wallets, type Portfolio, type Asset, type Wallet } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { ethers } from "ethers";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { z } from "zod";
+import { type PromiseSettledResult } from "node:util";
 import retry from "async-retry";
 
 const TokenBalance = z.object({
@@ -49,10 +50,10 @@ async function getEthereumBalance(address: string): Promise<WalletBalanceType> {
             const tokenBalance = await contract.balanceOf(address);
             return {
               symbol: token.symbol,
-              balance: ethers.formatEther(tokenBalance)
+              balance: ethers.formatUnits(tokenBalance, 'ether')
             };
           })
-        );
+        ) as PromiseSettledResult<TokenBalance>[];
 
         const validTokenBalances = tokenBalances
           .filter((result): result is PromiseFulfilledResult<{ symbol: string; balance: string }> => 
@@ -63,7 +64,7 @@ async function getEthereumBalance(address: string): Promise<WalletBalanceType> {
         return {
           address,
           chain: 'ethereum',
-          balance: ethers.formatEther(balance),
+          balance: ethers.formatUnits(balance, 'ether'),
           tokenBalances: validTokenBalances
         };
       } catch (error) {
@@ -313,9 +314,10 @@ export function registerRoutes(app: Express) {
       const portfolio = await db.query.portfolios.findFirst({
         where: eq(portfolios.userId, req.user!.id),
         with: {
-          wallets: true
+          wallets: true,
+          assets: true
         }
-      });
+      }) as Portfolio & { wallets: Wallet[]; assets: Asset[] };
 
       if (!portfolio) {
         return res.status(404).json({ error: "Portfolio not found" });

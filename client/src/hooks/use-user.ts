@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { User, InsertUser } from "@db/schema";
+import { z } from "zod";
+import type { User } from "@db/schema";
+
+const insertUserSchema = z.object({
+  username: z.string(),
+  password: z.string().min(6)
+});
+
+type InsertUser = z.infer<typeof insertUserSchema>;
 
 type RequestResult = {
   ok: true;

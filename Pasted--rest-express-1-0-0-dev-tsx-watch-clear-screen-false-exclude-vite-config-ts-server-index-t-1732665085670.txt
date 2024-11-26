@@ -1,0 +1,229 @@
+> rest-express@1.0.0 dev
+> tsx watch --clear-screen=false --exclude vite.config.ts.* server/index.ts
+
+bigint: Failed to load bindings, pure JS will be used (try npm run rebuild?)
+11:50:08 PM [express] serving on port 5000
+
+ ERROR(TypeScript)  Type '{ children: Element; fallback: Element; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<ErrorBoundary> & Readonly<Props>'.
+  Property 'fallback' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<ErrorBoundary> & Readonly<Props>'.
+ FILE  /home/runner/DeFiAssetTracker/client/src/components/TopBar.tsx:92:26
+
+    90 |             </Link>
+    91 |           )}
+  > 92 |           <ErrorBoundary fallback={
+       |                          ^^^^^^^^
+    93 |             <Button variant="outline" disabled>
+    94 |               Wallet Connection Unavailable
+    95 |             </Button>
+
+ ERROR(TypeScript)  Module '"@db/schema"' has no exported member 'InsertUser'.
+ FILE  /home/runner/DeFiAssetTracker/client/src/hooks/use-user.ts:2:21
+
+    1 | import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+  > 2 | import type { User, InsertUser } from "@db/schema";
+      |                     ^^^^^^^^^^
+    3 |
+    4 | type RequestResult = {
+    5 |   ok: true;
+
+ ERROR(TypeScript)  Object literal may only specify known properties, and 'version' does not exist in type 'ModalConnectorsOpts'.
+ FILE  /home/runner/DeFiAssetTracker/client/src/lib/wagmiConfig.ts:25:5
+
+    23 |     chains,
+    24 |     projectId,
+  > 25 |     version: 2
+       |     ^^^^^^^
+    26 |   }),
+    27 |   publicClient,
+    28 |   webSocketPublicClient,
+
+ ERROR(TypeScript)  Namespace 'global.Express' has no exported member 'NextFunction'.
+ FILE  /home/runner/DeFiAssetTracker/server/auth.ts:38:96
+
+    36 |
+    37 | // Middleware to ensure user is authenticated
+  > 38 | export function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+       |                                                                                                ^^^^^^^^^^^^
+    39 |   if (req.isAuthenticated()) {
+    40 |     return next();
+    41 |   }
+
+ ERROR(TypeScript)  Property 'status' does not exist on type 'Response'.
+ FILE  /home/runner/DeFiAssetTracker/server/auth.ts:42:7
+
+    40 |     return next();
+    41 |   }
+  > 42 |   res.status(401).send("Authentication required");
+       |       ^^^^^^
+    43 | }
+    44 | export function setupAuth(app: Express) {
+    45 |   const MemoryStore = createMemoryStore(session);
+
+ ERROR(TypeScript)  Property 'JsonRpcProvider' does not exist on type 'typeof import("/home/runner/DeFiAssetTracker/node_modules/ethers/lib/ethers")'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:30:37
+
+    28 |     async () => {
+    29 |       try {
+  > 30 |         const provider = new ethers.JsonRpcProvider(
+       |                                     ^^^^^^^^^^^^^^^
+    31 |           'https://eth-mainnet.g.alchemy.com/v2/demo'
+    32 |         );
+    33 |         const balance = await provider.getBalance(address);
+
+ ERROR(TypeScript)  Property 'formatEther' does not exist on type 'typeof import("/home/runner/DeFiAssetTracker/node_modules/ethers/lib/ethers")'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:52:31
+
+    50 |             return {
+    51 |               symbol: token.symbol,
+  > 52 |               balance: ethers.formatEther(tokenBalance)
+       |                               ^^^^^^^^^^^
+    53 |             };
+    54 |           })
+    55 |         );
+
+ ERROR(TypeScript)  Property 'formatEther' does not exist on type 'typeof import("/home/runner/DeFiAssetTracker/node_modules/ethers/lib/ethers")'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:66:27
+
+    64 |           address,
+    65 |           chain: 'ethereum',
+  > 66 |           balance: ethers.formatEther(balance),
+       |                           ^^^^^^^^^^^
+    67 |           tokenBalances: validTokenBalances
+    68 |         };
+    69 |       } catch (error) {
+
+ ERROR(TypeScript)  Property 'map' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:181:27
+
+    179 |       // Fetch balances for each wallet with proper error handling
+    180 |       const walletsWithBalances = await Promise.allSettled(
+  > 181 |         portfolio.wallets.map(async (wallet) => {
+        |                           ^^^
+    182 |           try {
+    183 |             return await getWalletBalance(wallet.address, wallet.chain);
+    184 |           } catch (error) {
+
+ ERROR(TypeScript)  Parameter 'wallet' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:181:38
+
+    179 |       // Fetch balances for each wallet with proper error handling
+    180 |       const walletsWithBalances = await Promise.allSettled(
+  > 181 |         portfolio.wallets.map(async (wallet) => {
+        |                                      ^^^^^^
+    182 |           try {
+    183 |             return await getWalletBalance(wallet.address, wallet.chain);
+    184 |           } catch (error) {
+
+ ERROR(TypeScript)  Parameter 'result' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:195:57
+
+    193 |       );
+    194 |
+  > 195 |       const processedWallets = walletsWithBalances.map((result, index) => {
+        |                                                         ^^^^^^
+    196 |         if (result.status === 'fulfilled') {
+    197 |           return result.value;
+    198 |         }
+
+ ERROR(TypeScript)  Parameter 'index' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:195:65
+
+    193 |       );
+    194 |
+  > 195 |       const processedWallets = walletsWithBalances.map((result, index) => {
+        |                                                                 ^^^^^
+    196 |         if (result.status === 'fulfilled') {
+    197 |           return result.value;
+    198 |         }
+
+ ERROR(TypeScript)  Property 'address' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:201:45
+
+    199 |         // Return wallet with error state if balance fetch failed
+    200 |         return {
+  > 201 |           address: portfolio.wallets[index].address,
+        |                                             ^^^^^^^
+    202 |           chain: portfolio.wallets[index].chain,
+    203 |           balance: '0',
+    204 |           error: 'Failed to fetch balance'
+
+ ERROR(TypeScript)  Property 'chain' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:202:43
+
+    200 |         return {
+    201 |           address: portfolio.wallets[index].address,
+  > 202 |           chain: portfolio.wallets[index].chain,
+        |                                           ^^^^^
+    203 |           balance: '0',
+    204 |           error: 'Failed to fetch balance'
+    205 |         };
+
+ ERROR(TypeScript)  Property 'map' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:325:27
+
+    323 |
+    324 |       const walletsWithBalances = await Promise.allSettled(
+  > 325 |         portfolio.wallets.map(wallet => getWalletBalance(wallet.address, wallet.chain))
+        |                           ^^^
+    326 |       );
+    327 |
+    328 |       const processedWallets = walletsWithBalances.map((result, index) => {
+
+ ERROR(TypeScript)  Parameter 'wallet' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:325:31
+
+    323 |
+    324 |       const walletsWithBalances = await Promise.allSettled(
+  > 325 |         portfolio.wallets.map(wallet => getWalletBalance(wallet.address, wallet.chain))
+        |                               ^^^^^^
+    326 |       );
+    327 |
+    328 |       const processedWallets = walletsWithBalances.map((result, index) => {
+
+ ERROR(TypeScript)  Parameter 'result' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:328:57
+
+    326 |       );
+    327 |
+  > 328 |       const processedWallets = walletsWithBalances.map((result, index) => {
+        |                                                         ^^^^^^
+    329 |         if (result.status === 'fulfilled') {
+    330 |           return result.value;
+    331 |         }
+
+ ERROR(TypeScript)  Parameter 'index' implicitly has an 'any' type.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:328:65
+
+    326 |       );
+    327 |
+  > 328 |       const processedWallets = walletsWithBalances.map((result, index) => {
+        |                                                                 ^^^^^
+    329 |         if (result.status === 'fulfilled') {
+    330 |           return result.value;
+    331 |         }
+
+ ERROR(TypeScript)  Property 'address' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:333:45
+
+    331 |         }
+    332 |         return {
+  > 333 |           address: portfolio.wallets[index].address,
+        |                                             ^^^^^^^
+    334 |           chain: portfolio.wallets[index].chain,
+    335 |           balance: '0',
+    336 |           error: 'Failed to fetch balance'
+
+ ERROR(TypeScript)  Property 'chain' does not exist on type 'never'.
+ FILE  /home/runner/DeFiAssetTracker/server/routes.ts:334:43
+
+    332 |         return {
+    333 |           address: portfolio.wallets[index].address,
+  > 334 |           chain: portfolio.wallets[index].chain,
+        |                                           ^^^^^
+    335 |           balance: '0',
+    336 |           error: 'Failed to fetch balance'
+    337 |         };
+
+[TypeScript] Found 20 errors. Watching for file changes.
+11:50:16 PM [express] GET /api/user 401 in 2ms
+^C11:50:30 PM [tsx] Previous process hasn't exited yet. Force killing...

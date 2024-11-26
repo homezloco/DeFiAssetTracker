@@ -1,55 +1,38 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { portfolios, assets } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { setupAuth } from "./auth";
+
+function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ error: "Not authenticated" });
+}
 
 export function registerRoutes(app: Express) {
-  // Initialize database tables
-  const initializeTables = async () => {
-    try {
-      // Create default portfolio if it doesn't exist
-      const existingPortfolio = await db.query.portfolios.findFirst();
-      if (!existingPortfolio) {
-        console.log("Creating default portfolio...");
-        await db.insert(portfolios).values({ name: "Default Portfolio" });
-      }
-      return true;
-    } catch (error) {
-      console.error("Failed to initialize tables:", error);
-      return false;
-    }
-  };
+  // Set up authentication routes
+  setupAuth(app);
 
-  // Initialize tables when routes are registered
-  initializeTables();
-
-  // Get portfolio with assets
-  app.get("/api/portfolio", async (req, res) => {
+  // Get portfolio with assets for authenticated user
+  app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
     try {
       console.log("Fetching portfolio data...");
       const portfolioData = await db.query.portfolios.findMany({
+        where: eq(portfolios.userId, req.user!.id),
         with: {
           assets: true
         }
-      }) as Array<{
-        id: number;
-        name: string;
-        createdAt: Date;
-        assets: Array<{
-          id: number;
-          portfolioId: number;
-          assetId: string;
-          blockchain: string;
-          amount: string;
-          purchasePrice: string;
-          purchaseDate: Date;
-        }>;
-      }>;
+      });
 
       if (!portfolioData || portfolioData.length === 0) {
         console.log("No portfolio found, creating default...");
         const [newPortfolio] = await db.insert(portfolios)
-          .values({ name: "Default Portfolio" })
+          .values({ 
+            name: "Default Portfolio",
+            userId: req.user!.id
+          })
           .returning();
         return res.json({ ...newPortfolio, assets: [] });
       }
@@ -66,7 +49,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add asset to portfolio
-  app.post("/api/portfolio/assets", async (req, res) => {
+  app.post("/api/portfolio/assets", ensureAuthenticated, async (req, res) => {
     try {
       const { assetId, amount, blockchain } = req.body;
       
@@ -79,12 +62,18 @@ export function registerRoutes(app: Express) {
 
       console.log(`Adding asset: ${assetId} (${blockchain})`);
       
-      // Get or create default portfolio
-      let portfolio = await db.query.portfolios.findFirst();
+      // Get or create user's portfolio
+      let portfolio = await db.query.portfolios.findFirst({
+        where: eq(portfolios.userId, req.user!.id)
+      });
+
       if (!portfolio) {
-        console.log("Creating new portfolio for asset");
+        console.log("Creating new portfolio for user");
         [portfolio] = await db.insert(portfolios)
-          .values({ name: "Default Portfolio" })
+          .values({ 
+            name: "Default Portfolio",
+            userId: req.user!.id
+          })
           .returning();
       }
 

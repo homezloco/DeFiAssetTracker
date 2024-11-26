@@ -75,10 +75,20 @@ export async function addWallet(wallet: { walletAddress: string; chain: string }
   return response.json();
 }
 
+const RETRY_AFTER = 60000; // 1 minute
+let lastFetchTime = 0;
+
 export async function fetchNews() {
+  const now = Date.now();
+  if (now - lastFetchTime < RETRY_AFTER) {
+    throw new Error('Rate limit exceeded. Please try again later.');
+  }
+  lastFetchTime = now;
+
   try {
+    // Use a different endpoint that's more reliable
     const response = await fetch(
-      "https://api.coingecko.com/api/v3/news",
+      "https://api.coingecko.com/api/v3/status_updates",
       {
         headers: {
           'Accept': 'application/json',
@@ -93,19 +103,20 @@ export async function fetchNews() {
 
     const data = await response.json();
     
-    if (!Array.isArray(data)) {
-      console.warn('News API returned invalid format');
-      return [];
+    if (!data.status_updates) {
+      throw new Error('Invalid news data format');
     }
 
-    return data.map((item: any) => ({
-      title: item.title || 'Untitled',
-      description: item.description || item.text || 'No description available',
-      url: item.url || '#',
-      source: item.source || 'Unknown Source',
-      categories: Array.isArray(item.categories) ? item.categories : [],
-      publishedAt: item.published_at || new Date().toISOString()
-    })).slice(0, 10); // Limit to 10 news items
+    return data.status_updates
+      .map((item: any) => ({
+        title: item.description || 'No title',
+        description: item.project.description || 'No description available',
+        url: item.project.link || '#',
+        source: item.project.name || 'Unknown Source',
+        categories: [item.category] || [],
+        publishedAt: item.created_at || new Date().toISOString()
+      }))
+      .slice(0, 10);
   } catch (error) {
     console.error('Error fetching news:', error);
     throw error;

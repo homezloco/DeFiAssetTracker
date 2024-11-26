@@ -78,31 +78,37 @@ export async function addWallet(wallet: { walletAddress: string; chain: string }
 export async function fetchNews() {
   try {
     const response = await fetch(
-      "https://api.coingecko.com/api/v3/news"
+      "https://api.coingecko.com/api/v3/news",
+      {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'DeFi Asset Tracker'
+        }
+      }
     );
     
     if (!response.ok) {
-      throw new Error('Failed to fetch news');
+      throw new Error(`Failed to fetch news: ${response.statusText}`);
     }
 
     const data = await response.json();
     
-    // Check if data is an array
     if (!Array.isArray(data)) {
-      console.warn('News API did not return an array');
+      console.warn('News API returned invalid format');
       return [];
     }
 
     return data.map((item: any) => ({
-      title: item.title || '',
-      description: item.description || item.text || '',
-      url: item.url || '',
-      source: item.source || 'Unknown',
+      title: item.title || 'Untitled',
+      description: item.description || item.text || 'No description available',
+      url: item.url || '#',
+      source: item.source || 'Unknown Source',
       categories: Array.isArray(item.categories) ? item.categories : [],
       publishedAt: item.published_at || new Date().toISOString()
     }));
   } catch (error) {
     console.error('Error fetching news:', error);
+    // Return empty array instead of throwing
     return [];
   }
 }

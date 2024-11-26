@@ -14,7 +14,15 @@ function NewsList() {
   if (error) {
     return (
       <Card className="p-4">
-        <p className="text-sm text-destructive">Failed to load news. Please try again later.</p>
+        <p className="text-sm text-destructive">
+          Unable to load news feed at this time. 
+          <button 
+            onClick={() => refetch()} 
+            className="ml-2 text-primary hover:underline"
+          >
+            Retry
+          </button>
+        </p>
       </Card>
     );
   }

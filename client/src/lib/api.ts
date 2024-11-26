@@ -82,7 +82,7 @@ let lastFetchTime = 0;
 export async function fetchNews() {
   try {
     const response = await fetch(
-      `${COINGECKO_API}/search/trending`,
+      `${COINGECKO_API}/status_updates`,
       {
         headers: {
           'Accept': 'application/json',
@@ -97,18 +97,18 @@ export async function fetchNews() {
 
     const data = await response.json();
     
-    if (!data.coins) {
+    if (!data.status_updates) {
       return [];
     }
 
-    return data.coins
+    return data.status_updates
       .map((item: any) => ({
-        title: item.item.name,
-        description: `${item.item.name} (${item.item.symbol.toUpperCase()}) is trending with market cap rank #${item.item.market_cap_rank}`,
-        url: `https://www.coingecko.com/en/coins/${item.item.id}`,
-        source: 'CoinGecko',
-        categories: ['Trending'],
-        publishedAt: new Date().toISOString()
+        title: item.project ? item.project.name : 'Cryptocurrency Update',
+        description: item.description,
+        url: item.project ? `https://www.coingecko.com/en/coins/${item.project.id}` : '#',
+        source: item.user || 'CoinGecko',
+        categories: item.category ? [item.category] : ['Update'],
+        publishedAt: item.created_at
       }))
       .slice(0, 10);
   } catch (error) {

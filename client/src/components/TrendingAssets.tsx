@@ -34,14 +34,11 @@ function TrendingAssetsList() {
           Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24" />
           ))
-        ) : trending?.coins?.map((coin) => (
+        ) : trending?.coins?.map((coin: any) => (
           <Badge key={coin.item.id} variant="secondary" className="flex items-center gap-1">
             <span className="text-xs text-muted-foreground">#{coin.item.market_cap_rank}</span>
             <span>{coin.item.symbol.toUpperCase()}</span>
-            <span>{(coin.item.price_btc).toLocaleString(undefined, {
-              minimumFractionDigits: 8,
-              maximumFractionDigits: 8
-            })} BTC</span>
+            <span>{Number(coin.item.price_btc).toFixed(8)} BTC</span>
           </Badge>
         ))}
       </div>

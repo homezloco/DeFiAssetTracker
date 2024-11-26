@@ -45,10 +45,14 @@ function NewsList() {
             <div className="h-4 bg-muted rounded w-1/4" />
           </Card>
         ))
-      ) : (
-        news.map((item) => (
+      ) : news?.length ? (
+        news.map((item: any) => (
           <NewsCard key={item.url} news={item} />
         ))
+      ) : (
+        <Card className="p-4">
+          <p className="text-sm text-muted-foreground">No news available at the moment.</p>
+        </Card>
       )}
     </div>
   );

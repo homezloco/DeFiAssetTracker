@@ -24,19 +24,14 @@ export function registerRoutes(app: Express) {
   app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
     try {
       console.log("Fetching portfolio data...");
-      const portfolioData = await db.select()
-        .from(portfolios)
-        .where(eq(portfolios.userId, req.user!.id))
-        .leftJoin(assets, eq(assets.portfolioId, portfolios.id))
-        .then((result) => {
-          if (!result.length) return null;
-          return {
-            ...result[0].portfolios,
-            assets: result.map(r => r.assets).filter(Boolean)
-          };
-        });
+      const result = await db.query.portfolios.findFirst({
+        where: eq(portfolios.userId, req.user!.id),
+        with: {
+          assets: true
+        }
+      });
 
-      if (!portfolioData) {
+      if (!result) {
         console.log("No portfolio found, creating default...");
         const [newPortfolio] = await db.insert(portfolios)
           .values({ 

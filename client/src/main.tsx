@@ -35,8 +35,15 @@ function ProtectedRoute({ component: Component }: ProtectedRouteProps) {
   }, [isLoading, user, setLocation]);
 
   React.useEffect(() => {
-    handleRedirect();
-  }, [handleRedirect]);
+    if (!isLoading && !user) {
+      setLocation("/auth");
+    } else if (!isLoading && user) {
+      // Ensure we're on the correct route when authenticated
+      if (window.location.pathname === "/auth") {
+        setLocation("/portfolio");
+      }
+    }
+  }, [isLoading, user, setLocation]);
 
   if (isLoading) {
     return (

@@ -47,6 +47,10 @@ export default function AuthPage() {
         });
         return;
       }
+      
+      // Add a small delay to ensure the auth state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       toast({
         title: "Success",
         description: `Successfully ${isLogin ? "logged in" : "registered"}!`,

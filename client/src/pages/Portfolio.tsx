@@ -113,13 +113,30 @@ export default function Portfolio() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {portfolio?.assets.map((asset) => (
-          <Card key={asset.id} className="p-4">
-            <h3 className="font-bold">{asset.assetId}</h3>
-            <p>Amount: {asset.amount}</p>
-            <p>Purchase Price: ${asset.purchasePrice}</p>
+        {isLoading ? (
+          // Loading skeleton
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="p-4 animate-pulse">
+              <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+              <div className="h-4 bg-muted rounded w-1/2 mb-2" />
+              <div className="h-4 bg-muted rounded w-1/4" />
+            </Card>
+          ))
+        ) : portfolio?.assets?.length ? (
+          // Portfolio assets
+          portfolio.assets.map((asset) => (
+            <Card key={asset.id} className="p-4">
+              <h3 className="font-bold">{asset.assetId}</h3>
+              <p>Amount: {asset.amount}</p>
+              <p>Purchase Price: ${asset.purchasePrice}</p>
+            </Card>
+          ))
+        ) : (
+          // Empty state
+          <Card className="p-4 col-span-full text-center">
+            <p className="text-muted-foreground">No assets in portfolio. Add some assets to get started!</p>
           </Card>
-        ))}
+        )}
       </div>
     </div>
   );

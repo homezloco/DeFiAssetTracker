@@ -33,8 +33,8 @@ interface WalletFormData {
 const BLOCKCHAIN_OPTIONS = [
   { label: "Ethereum", value: "ethereum" },
   { label: "Solana", value: "solana" },
-  { label: "Avalanche", value: "avalanche" },
-  { label: "BSC", value: "bsc" }
+  { label: "BSC", value: "bsc" },
+  { label: "XRP", value: "xrp" }
 ];
 
 export default function Portfolio() {

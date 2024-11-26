@@ -1,14 +1,14 @@
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
 type ChainIdentifiers = {
-  [key in 'ethereum' | 'solana' | 'avalanche' | 'bsc']: string[];
+  [key in 'ethereum' | 'solana' | 'bsc' | 'xrp']: string[];
 };
 
 const SUPPORTED_CHAINS: ChainIdentifiers = {
   ethereum: ['ethereum', 'eth'],
   solana: ['solana', 'sol'],
-  avalanche: ['avalanche-2', 'avax'],
-  bsc: ['binancecoin', 'bnb']
+  bsc: ['binancecoin', 'bnb'],
+  xrp: ['ripple', 'xrp']
 };
 
 export async function fetchTopAssets() {
@@ -81,7 +81,7 @@ let lastFetchTime = 0;
 export async function fetchNews() {
   try {
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/status_updates',
+      `${COINGECKO_API}/search/trending`,
       {
         headers: {
           'Accept': 'application/json',
@@ -96,18 +96,18 @@ export async function fetchNews() {
 
     const data = await response.json();
     
-    if (!data.status_updates) {
+    if (!data.coins) {
       return [];
     }
 
-    return data.status_updates
+    return data.coins
       .map((item: any) => ({
-        title: item.description || 'No title',
-        description: item.project.description || 'No description available',
-        url: item.project.link || '#',
-        source: item.project.name || 'Unknown Source',
-        categories: [item.category] || [],
-        publishedAt: item.created_at || new Date().toISOString()
+        title: item.item.name,
+        description: `${item.item.name} (${item.item.symbol.toUpperCase()}) is trending with market cap rank #${item.item.market_cap_rank}`,
+        url: `https://www.coingecko.com/en/coins/${item.item.id}`,
+        source: 'CoinGecko',
+        categories: ['Trending'],
+        publishedAt: new Date().toISOString()
       }))
       .slice(0, 10);
   } catch (error) {

@@ -14,8 +14,8 @@ interface WalletAssetsProps {
 const chainColors = {
   ethereum: "bg-purple-500/10 text-purple-500",
   solana: "bg-green-500/10 text-green-500",
-  avalanche: "bg-red-500/10 text-red-500",
-  bsc: "bg-yellow-500/10 text-yellow-500"
+  bsc: "bg-yellow-500/10 text-yellow-500",
+  xrp: "bg-blue-500/10 text-blue-500"
 };
 
 async function refreshBalances() {

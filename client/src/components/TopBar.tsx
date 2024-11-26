@@ -1,11 +1,24 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Web3Button, useWeb3Modal } from '@web3modal/react';
-import { useAccount } from 'wagmi';
+import { useAccount, useConnect } from 'wagmi';
+import { ErrorBoundary } from "./ErrorBoundary";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TopBar() {
   const { isConnected, address } = useAccount();
   const { open } = useWeb3Modal();
+
+  const { toast } = useToast();
+  const { error: connectError } = useConnect({
+    onError: (error) => {
+      toast({
+        title: "Connection Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
 
   return (
     <header className="border-b">
@@ -21,16 +34,23 @@ export default function TopBar() {
           <Link href="/portfolio">
             <Button variant="ghost">Portfolio</Button>
           </Link>
-          {isConnected ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </span>
-              <Web3Button />
-            </div>
-          ) : (
-            <Button onClick={() => open()}>Connect Wallet</Button>
-          )}
+          <ErrorBoundary>
+            {isConnected ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {address?.slice(0, 6)}...{address?.slice(-4)}
+                </span>
+                <Web3Button />
+              </div>
+            ) : (
+              <Button 
+                onClick={() => open()}
+                disabled={!!connectError}
+              >
+                Connect Wallet
+              </Button>
+            )}
+          </ErrorBoundary>
         </nav>
       </div>
     </header>

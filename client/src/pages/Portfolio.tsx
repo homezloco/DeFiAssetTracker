@@ -5,7 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccount } from 'wagmi';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Portfolio, PortfolioAsset } from "@/types/asset";
+import type { Portfolio, PortfolioAsset, WalletBalance } from "@/types/asset";
+import WalletAssets from "@/components/WalletAssets";
 import { useForm } from "react-hook-form";
 import {
   Form,
@@ -212,28 +213,36 @@ export default function Portfolio() {
         </TabsContent>
       </Tabs>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="p-4 animate-pulse">
-              <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-              <div className="h-4 bg-muted rounded w-1/2 mb-2" />
-              <div className="h-4 bg-muted rounded w-1/4" />
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="p-4 animate-pulse">
+                <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                <div className="h-4 bg-muted rounded w-1/2 mb-2" />
+                <div className="h-4 bg-muted rounded w-1/4" />
+              </Card>
+            ))
+          ) : portfolio?.assets?.length ? (
+            portfolio.assets.map((asset) => (
+              <Card key={asset.id} className="p-4">
+                <h3 className="font-bold">{asset.assetId}</h3>
+                <p>Amount: {asset.amount}</p>
+                <p>Purchase Price: ${asset.purchasePrice}</p>
+              </Card>
+            ))
+          ) : (
+            <Card className="p-4 col-span-full text-center">
+              <p className="text-muted-foreground">No assets in portfolio. Add some assets to get started!</p>
             </Card>
-          ))
-        ) : portfolio?.assets?.length ? (
-          portfolio.assets.map((asset) => (
-            <Card key={asset.id} className="p-4">
-              <h3 className="font-bold">{asset.assetId}</h3>
-              <p>Amount: {asset.amount}</p>
-              <p>Purchase Price: ${asset.purchasePrice}</p>
-            </Card>
-          ))
-        ) : (
-          <Card className="p-4 col-span-full text-center">
-            <p className="text-muted-foreground">No assets in portfolio. Add some assets to get started!</p>
-          </Card>
-        )}
+          )}
+        </div>
+
+        <h2 className="text-2xl font-bold mt-8 mb-4">Wallet Assets</h2>
+        <WalletAssets 
+          wallets={portfolio?.wallets || []} 
+          isLoading={isLoading} 
+        />
       </div>
     </div>
   );

@@ -20,9 +20,20 @@ export interface PortfolioAsset {
   purchaseDate: Date;
 }
 
+export interface WalletBalance {
+  address: string;
+  chain: string;
+  balance: string;
+  tokenBalances?: {
+    symbol: string;
+    balance: string;
+  }[];
+}
+
 export interface Portfolio {
   id: number;
   name: string;
   createdAt: Date;
   assets: PortfolioAsset[];
+  wallets: WalletBalance[];
 }

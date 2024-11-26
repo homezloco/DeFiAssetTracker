@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { portfolios, assets, wallets, type Portfolio, type Asset, type Wallet } from "@db/schema";
-import { providers } from 'ethers';
+import { providers, Contract } from 'ethers';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 
@@ -12,6 +13,39 @@ function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ error: "Not authenticated" });
 }
 
+async function getEthereumBalance(address: string): Promise<string> {
+  try {
+    const provider = new providers.JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/demo');
+    const balance = await provider.getBalance(address);
+    return providers.formatEther(balance);
+  } catch (error) {
+    console.error('Error fetching ETH balance:', error);
+    return '0';
+  }
+}
+
+async function getSolanaBalance(address: string): Promise<string> {
+  try {
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    const publicKey = new PublicKey(address);
+    const balance = await connection.getBalance(publicKey);
+    return (balance / 1e9).toString();
+  } catch (error) {
+    console.error('Error fetching SOL balance:', error);
+    return '0';
+  }
+}
+
+async function getWalletBalance(address: string, chain: string): Promise<string> {
+  switch (chain) {
+    case 'ethereum':
+      return getEthereumBalance(address);
+    case 'solana':
+      return getSolanaBalance(address);
+    default:
+      return '0';
+  }
+}
 export function registerRoutes(app: Express) {
   // Set up authentication routes
   setupAuth(app);
@@ -39,7 +73,15 @@ export function registerRoutes(app: Express) {
         return res.json({ ...newPortfolio, assets: [], wallets: [] });
       }
 
-      res.json(portfolio);
+      // Fetch balances for each wallet
+      const walletsWithBalances = await Promise.all(
+        portfolio.wallets.map(async (wallet) => ({
+          ...wallet,
+          balance: await getWalletBalance(wallet.address, wallet.chain)
+        }))
+      );
+
+      res.json({ ...portfolio, wallets: walletsWithBalances });
     } catch (error) {
       console.error("Portfolio fetch error:", error);
       res.status(500).json({ 

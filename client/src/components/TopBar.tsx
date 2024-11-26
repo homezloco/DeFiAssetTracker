@@ -4,17 +4,28 @@ import { Web3Button, useWeb3Modal } from '@web3modal/react';
 import { useAccount, useConnect } from 'wagmi';
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export default function TopBar() {
   const { isConnected, address } = useAccount();
   const { open } = useWeb3Modal();
-
   const { toast } = useToast();
-  const { error: connectError } = useConnect({
+  const { isLoading: isConnecting, error: connectError } = useConnect({
     onError: (error) => {
+      let errorMessage = "Failed to connect wallet";
+      
+      // Handle specific Web3Modal errors
+      if (error.message.includes("User rejected")) {
+        errorMessage = "Connection rejected by user";
+      } else if (error.message.includes("Chain not configured")) {
+        errorMessage = "Selected network is not supported";
+      } else if (error.message.includes("Resource unavailable")) {
+        errorMessage = "Wallet not found. Please install a Web3 wallet";
+      }
+
       toast({
         title: "Connection Error",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -45,9 +56,16 @@ export default function TopBar() {
             ) : (
               <Button 
                 onClick={() => open()}
-                disabled={!!connectError}
+                disabled={isConnecting || !!connectError}
               >
-                Connect Wallet
+                {isConnecting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  "Connect Wallet"
+                )}
               </Button>
             )}
           </ErrorBoundary>

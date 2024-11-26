@@ -38,3 +38,15 @@ export const selectAssetSchema = createSelectSchema(assets);
 export type User = z.infer<typeof selectUserSchema>;
 export type Portfolio = z.infer<typeof selectPortfolioSchema>;
 export type Asset = z.infer<typeof selectAssetSchema>;
+
+export const wallets = pgTable("wallets", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  portfolioId: integer("portfolio_id").references(() => portfolios.id),
+  address: text("address").notNull(),
+  chain: text("chain").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const insertWalletSchema = createInsertSchema(wallets);
+export const selectWalletSchema = createSelectSchema(wallets);
+export type Wallet = z.infer<typeof selectWalletSchema>;

@@ -62,3 +62,15 @@ export async function addAsset(asset: { assetId: string; amount: number; blockch
   });
   return response.json();
 }
+
+export async function addWallet(wallet: { walletAddress: string; chain: string }) {
+  const response = await fetch("/api/portfolio/wallets", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      address: wallet.walletAddress,
+      chain: wallet.chain
+    })
+  });
+  return response.json();
+}

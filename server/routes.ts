@@ -1,11 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { portfolios, assets, type Portfolio, type Asset } from "@db/schema";
-
-type JoinedPortfolio = {
-  portfolio: Portfolio;
-  assets: Asset[];
-};
+import { portfolios, assets, wallets, type Portfolio, type Asset, type Wallet } from "@db/schema";
+import { providers } from 'ethers';
 import { eq, and } from "drizzle-orm";
 import { setupAuth } from "./auth";
 
@@ -23,27 +19,27 @@ export function registerRoutes(app: Express) {
   // Get portfolio with assets for authenticated user
   app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
     try {
-      console.log("Fetching portfolio data...");
-      const result = await db.query.portfolios.findFirst({
+      const portfolio = await db.query.portfolios.findFirst({
         where: eq(portfolios.userId, req.user!.id),
         with: {
-          assets: true
+          assets: true,
+          wallets: true
         }
       });
 
-      if (!result) {
-        console.log("No portfolio found, creating default...");
+      if (!portfolio) {
+        // Create default portfolio for new users
         const [newPortfolio] = await db.insert(portfolios)
           .values({ 
             name: "Default Portfolio",
             userId: req.user!.id
           })
           .returning();
-        return res.json({ ...newPortfolio, assets: [] });
+
+        return res.json({ ...newPortfolio, assets: [], wallets: [] });
       }
 
-      console.log(`Found portfolio with ${portfolioData[0].assets.length} assets`);
-      res.json(portfolioData[0]);
+      res.json(portfolio);
     } catch (error) {
       console.error("Portfolio fetch error:", error);
       res.status(500).json({ 
@@ -64,8 +60,6 @@ export function registerRoutes(app: Express) {
           required: ["assetId", "amount", "blockchain"]
         });
       }
-
-      console.log(`Adding asset: ${assetId} (${blockchain})`);
       
       // Get or create user's portfolio
       let portfolio = await db.query.portfolios.findFirst({
@@ -73,7 +67,6 @@ export function registerRoutes(app: Express) {
       });
 
       if (!portfolio) {
-        console.log("Creating new portfolio for user");
         [portfolio] = await db.insert(portfolios)
           .values({ 
             name: "Default Portfolio",
@@ -92,12 +85,55 @@ export function registerRoutes(app: Express) {
         })
         .returning();
 
-      console.log(`Asset added successfully: ${asset.id}`);
       res.json(asset);
     } catch (error) {
       console.error("Asset creation error:", error);
       res.status(500).json({ 
         error: "Failed to add asset",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Add wallet to portfolio
+  app.post("/api/portfolio/wallets", ensureAuthenticated, async (req, res) => {
+    try {
+      const { address, chain } = req.body;
+      
+      if (!address || !chain) {
+        return res.status(400).json({ 
+          error: "Missing required fields",
+          required: ["address", "chain"]
+        });
+      }
+
+      // Get or create user's portfolio
+      let portfolio = await db.query.portfolios.findFirst({
+        where: eq(portfolios.userId, req.user!.id)
+      });
+
+      if (!portfolio) {
+        [portfolio] = await db.insert(portfolios)
+          .values({ 
+            name: "Default Portfolio",
+            userId: req.user!.id
+          })
+          .returning();
+      }
+
+      const [wallet] = await db.insert(wallets)
+        .values({
+          portfolioId: portfolio.id,
+          address,
+          chain
+        })
+        .returning();
+
+      res.json(wallet);
+    } catch (error) {
+      console.error("Wallet creation error:", error);
+      res.status(500).json({ 
+        error: "Failed to add wallet",
         details: error instanceof Error ? error.message : "Unknown error"
       });
     }

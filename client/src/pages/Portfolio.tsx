@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { fetchPortfolio, addAsset } from "@/lib/api";
+import { fetchPortfolio, addAsset, addWallet } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +40,12 @@ export default function Portfolio() {
   const { toast } = useToast();
   const { address: connectedWallet } = useAccount();
   const assetForm = useForm<AssetFormData>();
-  const walletForm = useForm<WalletFormData>();
+  const walletForm = useForm<WalletFormData>({
+    defaultValues: {
+      walletAddress: "",
+      chain: ""
+    }
+  });
   
   const { data: portfolio, isLoading } = useQuery<Portfolio>({
     queryKey: ["portfolio"],
@@ -53,6 +58,24 @@ export default function Portfolio() {
       toast({
         title: "Asset added successfully",
         description: "Your portfolio has been updated"
+      });
+    }
+  });
+
+  const addWalletMutation = useMutation({
+    mutationFn: addWallet,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Wallet added to portfolio"
+      });
+      walletForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
       });
     }
   });
@@ -140,25 +163,7 @@ export default function Portfolio() {
             
             <Form {...walletForm}>
               <form onSubmit={walletForm.handleSubmit((data) => {
-                toast({
-                  title: "Adding wallet...",
-                  description: "Please wait while we add your wallet to the portfolio"
-                });
-                addWallet(data)
-                  .then(() => {
-                    toast({
-                      title: "Success",
-                      description: "Wallet added to portfolio"
-                    });
-                    walletForm.reset();
-                  })
-                  .catch((error) => {
-                    toast({
-                      title: "Error",
-                      description: error.message,
-                      variant: "destructive"
-                    });
-                  });
+                addWalletMutation.mutate(data);
               })}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField

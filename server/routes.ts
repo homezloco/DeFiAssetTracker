@@ -23,13 +23,9 @@ export function registerRoutes(app: Express) {
   app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
     try {
       console.log("Fetching portfolio data...");
-      const portfolioData = await db.query.portfolios.findMany({
-        as: "PortfolioWithAssets",
-        where: eq(portfolios.userId, req.user!.id),
-        with: {
-          assets: true
-        }
-      });
+      const portfolioData = await db.select().from(portfolios)
+        .where(eq(portfolios.userId, req.user!.id))
+        .leftJoin(assets, eq(assets.portfolioId, portfolios.id));
 
       if (!portfolioData || portfolioData.length === 0) {
         console.log("No portfolio found, creating default...");

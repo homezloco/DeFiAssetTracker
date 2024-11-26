@@ -3,11 +3,11 @@ import { mainnet, avalanche, bsc } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum';
 
-if (!import.meta.env.VITE_WALLETCONNECT_PROJECT_ID) {
-  throw new Error('Missing VITE_WALLETCONNECT_PROJECT_ID environment variable');
-}
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+if (!projectId) {
+  console.warn('WalletConnect Project ID not found, some features may be limited');
+}
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [mainnet, avalanche, bsc],

@@ -5,8 +5,9 @@ import { useAccount, useConnect } from 'wagmi';
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useUser } from "@/hooks/use-user";
 
-export default function TopBar() {
+function WalletConnection() {
   const { isConnected, address } = useAccount();
   const { open } = useWeb3Modal();
   const { toast } = useToast();
@@ -14,7 +15,6 @@ export default function TopBar() {
     onError: (error) => {
       let errorMessage = "Failed to connect wallet";
       
-      // Handle specific Web3Modal errors
       if (error.message.includes("User rejected")) {
         errorMessage = "Connection rejected by user";
       } else if (error.message.includes("Chain not configured")) {
@@ -31,6 +31,41 @@ export default function TopBar() {
     }
   });
 
+  if (connectError) {
+    return (
+      <Button variant="outline" onClick={() => open()} className="text-destructive">
+        Retry Connection
+      </Button>
+    );
+  }
+
+  return isConnected ? (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground">
+        {address?.slice(0, 6)}...{address?.slice(-4)}
+      </span>
+      <Web3Button />
+    </div>
+  ) : (
+    <Button 
+      onClick={() => open()}
+      disabled={isConnecting}
+    >
+      {isConnecting ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Connecting...
+        </>
+      ) : (
+        "Connect Wallet"
+      )}
+    </Button>
+  );
+}
+
+export default function TopBar() {
+  const { user, logout } = useUser();
+
   return (
     <header className="border-b">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -45,29 +80,21 @@ export default function TopBar() {
           <Link href="/portfolio">
             <Button variant="ghost">Portfolio</Button>
           </Link>
-          <ErrorBoundary>
-            {isConnected ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
-                  {address?.slice(0, 6)}...{address?.slice(-4)}
-                </span>
-                <Web3Button />
-              </div>
-            ) : (
-              <Button 
-                onClick={() => open()}
-                disabled={isConnecting || !!connectError}
-              >
-                {isConnecting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  "Connect Wallet"
-                )}
-              </Button>
-            )}
+          {user ? (
+            <Button variant="outline" onClick={() => logout()}>
+              Logout
+            </Button>
+          ) : (
+            <Link href="/auth">
+              <Button>Login</Button>
+            </Link>
+          )}
+          <ErrorBoundary fallback={
+            <Button variant="outline" disabled>
+              Wallet Connection Unavailable
+            </Button>
+          }>
+            <WalletConnection />
           </ErrorBoundary>
         </nav>
       </div>

@@ -94,11 +94,8 @@ export async function fetchNews() {
     const data = await response.json();
     
     if (!Array.isArray(data)) {
-      throw new Error('Invalid news data format');
-    }
-
-    if (data.length === 0) {
-      throw new Error('No news available');
+      console.warn('News API returned invalid format');
+      return [];
     }
 
     return data.map((item: any) => ({
@@ -108,9 +105,9 @@ export async function fetchNews() {
       source: item.source || 'Unknown Source',
       categories: Array.isArray(item.categories) ? item.categories : [],
       publishedAt: item.published_at || new Date().toISOString()
-    }));
+    })).slice(0, 10); // Limit to 10 news items
   } catch (error) {
     console.error('Error fetching news:', error);
-    throw error; // Let React Query handle the error
+    throw error;
   }
 }

@@ -17,7 +17,15 @@ import { useToast } from "@/hooks/use-toast";
 interface FormData {
   assetId: string;
   amount: number;
+  blockchain: string;
 }
+
+const BLOCKCHAIN_OPTIONS = [
+  { label: "Ethereum", value: "ethereum" },
+  { label: "Solana", value: "solana" },
+  { label: "Avalanche", value: "avalanche" },
+  { label: "BSC", value: "bsc" }
+];
 
 export default function Portfolio() {
   const { toast } = useToast();
@@ -45,7 +53,7 @@ export default function Portfolio() {
       <Card className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit((data) => addAssetMutation.mutate(data))}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="assetId"

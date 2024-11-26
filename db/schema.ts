@@ -12,6 +12,7 @@ export const assets = pgTable("assets", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
   portfolioId: integer("portfolio_id").references(() => portfolios.id),
   assetId: text("asset_id").notNull(), // CoinGecko asset ID
+  blockchain: text("blockchain").notNull().default('ethereum'),
   amount: decimal("amount").notNull(),
   purchasePrice: decimal("purchase_price").notNull(),
   purchaseDate: timestamp("purchase_date").defaultNow().notNull()

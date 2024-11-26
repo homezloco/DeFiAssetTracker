@@ -12,8 +12,16 @@ interface AssetCardProps {
     market_cap: number;
     volume_24h: number;
     sparkline: number[];
+    blockchain: string;
   };
 }
+
+const blockchainColors = {
+  ethereum: "bg-purple-500/10 text-purple-500",
+  solana: "bg-green-500/10 text-green-500",
+  avalanche: "bg-red-500/10 text-red-500",
+  bsc: "bg-yellow-500/10 text-yellow-500"
+};
 
 export default function AssetCard({ asset }: AssetCardProps) {
   const priceChangeColor = asset.price_change_percentage_24h >= 0 
@@ -24,7 +32,12 @@ export default function AssetCard({ asset }: AssetCardProps) {
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="font-bold text-lg">{asset.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-lg">{asset.name}</h3>
+            <Badge variant="outline" className={blockchainColors[asset.blockchain as keyof typeof blockchainColors]}>
+              {asset.blockchain.toUpperCase()}
+            </Badge>
+          </div>
           <p className="text-muted-foreground uppercase">{asset.symbol}</p>
         </div>
         <Badge variant={asset.price_change_percentage_24h >= 0 ? "default" : "destructive"}>

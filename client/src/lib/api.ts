@@ -1,10 +1,11 @@
 const COINGECKO_API = "https://api.coingecko.com/api/v3";
 
 type ChainIdentifiers = {
-  [key in 'ethereum' | 'solana' | 'bsc' | 'xrp']: string[];
+  [key in 'bitcoin' | 'ethereum' | 'solana' | 'bsc' | 'xrp']: string[];
 };
 
 const SUPPORTED_CHAINS: ChainIdentifiers = {
+  bitcoin: ['bitcoin', 'btc'],
   ethereum: ['ethereum', 'eth'],
   solana: ['solana', 'sol'],
   bsc: ['binancecoin', 'bnb'],

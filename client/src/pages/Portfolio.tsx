@@ -31,6 +31,7 @@ interface WalletFormData {
 }
 
 const BLOCKCHAIN_OPTIONS = [
+  { label: "Bitcoin", value: "bitcoin" },
   { label: "Ethereum", value: "ethereum" },
   { label: "Solana", value: "solana" },
   { label: "BSC", value: "bsc" },

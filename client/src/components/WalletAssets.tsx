@@ -12,6 +12,7 @@ interface WalletAssetsProps {
 }
 
 const chainColors = {
+  bitcoin: "bg-orange-500/10 text-orange-500",
   ethereum: "bg-purple-500/10 text-purple-500",
   solana: "bg-green-500/10 text-green-500",
   bsc: "bg-yellow-500/10 text-yellow-500",

@@ -34,13 +34,17 @@ function TrendingAssetsList() {
           Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24" />
           ))
-        ) : trending?.coins?.map((coin: any) => (
-          <Badge key={coin.item.id} variant="secondary" className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">#{coin.item.market_cap_rank}</span>
-            <span>{coin.item.symbol.toUpperCase()}</span>
-            <span>{Number(coin.item.price_btc).toFixed(8)} BTC</span>
-          </Badge>
-        ))}
+        ) : trending?.coins?.length ? (
+          trending.coins.map((coin) => (
+            <Badge key={coin.item.id} variant="secondary" className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">#{coin.item.market_cap_rank}</span>
+              <span>{coin.item.symbol.toUpperCase()}</span>
+              <span>{Number(coin.item.price_btc).toFixed(8)} BTC</span>
+            </Badge>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No trending assets available</p>
+        )}
       </div>
     </ScrollArea>
   );

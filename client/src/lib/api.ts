@@ -30,7 +30,8 @@ export async function fetchTopAssets() {
       return {
         ...asset,
         blockchain,
-        sparkline: asset.sparkline_in_7d?.price || []
+        sparkline: asset.sparkline_in_7d?.price || [],
+        volume_24h: asset.total_volume || 0
       };
     })
     .filter((asset: any) => 

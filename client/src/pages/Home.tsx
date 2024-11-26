@@ -3,7 +3,8 @@ import { fetchTopAssets } from "@/lib/api";
 import AssetCard from "@/components/AssetCard";
 import TrendingAssets from "@/components/TrendingAssets";
 import NewsFeed from "@/components/NewsFeed";
-import { Card } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Asset } from "@/types/asset";
 
 export default function Home() {
@@ -19,10 +20,22 @@ export default function Home() {
         <h1 className="text-3xl font-bold">DeFi Market Overview</h1>
       </div>
 
-      <TrendingAssets />
+      <Card>
+        <CardHeader>
+          <CardTitle>Trending Assets</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TrendingAssets />
+        </CardContent>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-3 order-2 lg:order-1">
+      <Tabs defaultValue="market" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="market">Market</TabsTrigger>
+          <TabsTrigger value="news">News Feed</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="market">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, i) => (
@@ -34,13 +47,12 @@ export default function Home() {
               ))
             )}
           </div>
-        </div>
-        
-        <div className="order-1 lg:order-2">
-          <h2 className="text-2xl font-bold mb-4">Latest News</h2>
+        </TabsContent>
+
+        <TabsContent value="news">
           <NewsFeed />
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import passport from "passport";
 import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
-import { type Express } from "express";
+import { type Express, type Request, type Response, type NextFunction } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
@@ -35,7 +35,7 @@ declare global {
 }
 
 // Middleware to ensure user is authenticated
-export function ensureAuthenticated(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+export function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {
     return next();
   }

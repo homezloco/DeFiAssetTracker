@@ -1,5 +1,5 @@
 import { setupAuth, ensureAuthenticated } from "./auth";
-import { type Express } from "express";
+import { type Express, Request, Response } from "express";
 import { db } from "../db";
 import { portfolios, assets, wallets, type Portfolio, type Asset, type Wallet } from "@db/schema";
 import { eq } from "drizzle-orm";
@@ -7,7 +7,6 @@ import { ethers } from "ethers";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { z } from "zod";
-import { type PromiseSettledResult } from "node:util";
 import retry from "async-retry";
 
 const TokenBalance = z.object({
@@ -22,15 +21,16 @@ const WalletBalance = z.object({
   tokenBalances: z.array(TokenBalance).optional()
 });
 
+type TokenBalanceType = z.infer<typeof TokenBalance>;
 type WalletBalanceType = z.infer<typeof WalletBalance>;
 
 async function getEthereumBalance(address: string): Promise<WalletBalanceType> {
   return await retry(
     async () => {
       try {
-        const provider = new ethers.JsonRpcProvider(
-          'https://eth-mainnet.g.alchemy.com/v2/demo'
-        );
+        const provider = ethers.getDefaultProvider('mainnet', {
+          alchemy: 'demo'
+        });
         const balance = await provider.getBalance(address);
         
         // Get ERC20 token balances for common tokens
@@ -53,10 +53,10 @@ async function getEthereumBalance(address: string): Promise<WalletBalanceType> {
               balance: ethers.formatUnits(tokenBalance, 'ether')
             };
           })
-        ) as PromiseSettledResult<TokenBalance>[];
+        );
 
         const validTokenBalances = tokenBalances
-          .filter((result): result is PromiseFulfilledResult<{ symbol: string; balance: string }> => 
+          .filter((result): result is PromiseFulfilledResult<TokenBalanceType> => 
             result.status === 'fulfilled' && Number(result.value.balance) > 0
           )
           .map(result => result.value);
@@ -101,7 +101,7 @@ async function getSolanaBalance(address: string): Promise<WalletBalanceType> {
               const parsedData = (accountInfo.value?.data as any)?.parsed;
               if (parsedData?.info?.tokenAmount?.uiAmount > 0) {
                 return {
-                  symbol: parsedData.info.mint, // We could add token metadata resolution here
+                  symbol: parsedData.info.mint,
                   balance: parsedData.info.tokenAmount.uiAmount.toString()
                 };
               }
@@ -114,7 +114,7 @@ async function getSolanaBalance(address: string): Promise<WalletBalanceType> {
         );
 
         const validTokenBalances = tokenBalances
-          .filter((result): result is PromiseFulfilledResult<{ symbol: string; balance: string } | null> => 
+          .filter((result): result is PromiseFulfilledResult<TokenBalanceType | null> => 
             result.status === 'fulfilled' && result.value !== null
           )
           .map(result => result.value!);
@@ -155,10 +155,10 @@ export function registerRoutes(app: Express) {
   setupAuth(app);
 
   // Get portfolio with assets for authenticated user
-  app.get("/api/portfolio", ensureAuthenticated, async (req, res) => {
+  app.get("/api/portfolio", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
       const portfolio = await db.query.portfolios.findFirst({
-        where: eq(portfolios.userId, req.user!.id),
+        where: eq(portfolios.userId, (req.user as any).id),
         with: {
           assets: true,
           wallets: true
@@ -170,7 +170,7 @@ export function registerRoutes(app: Express) {
         const [newPortfolio] = await db.insert(portfolios)
           .values({ 
             name: "Default Portfolio",
-            userId: req.user!.id
+            userId: (req.user as any).id
           })
           .returning();
 
@@ -179,7 +179,7 @@ export function registerRoutes(app: Express) {
 
       // Fetch balances for each wallet with proper error handling
       const walletsWithBalances = await Promise.allSettled(
-        portfolio.wallets.map(async (wallet) => {
+        (portfolio.wallets || []).map(async (wallet: Wallet) => {
           try {
             return await getWalletBalance(wallet.address, wallet.chain);
           } catch (error) {
@@ -217,7 +217,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add asset to portfolio
-  app.post("/api/portfolio/assets", ensureAuthenticated, async (req, res) => {
+  app.post("/api/portfolio/assets", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
       const { assetId, amount, blockchain } = req.body;
       
@@ -230,14 +230,14 @@ export function registerRoutes(app: Express) {
       
       // Get or create user's portfolio
       let portfolio = await db.query.portfolios.findFirst({
-        where: eq(portfolios.userId, req.user!.id)
+        where: eq(portfolios.userId, (req.user as any).id)
       });
 
       if (!portfolio) {
         [portfolio] = await db.insert(portfolios)
           .values({ 
             name: "Default Portfolio",
-            userId: req.user!.id
+            userId: (req.user as any).id
           })
           .returning();
       }
@@ -263,7 +263,7 @@ export function registerRoutes(app: Express) {
   });
 
   // Add wallet to portfolio
-  app.post("/api/portfolio/wallets", ensureAuthenticated, async (req, res) => {
+  app.post("/api/portfolio/wallets", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
       const { address, chain } = req.body;
       
@@ -276,14 +276,14 @@ export function registerRoutes(app: Express) {
 
       // Get or create user's portfolio
       let portfolio = await db.query.portfolios.findFirst({
-        where: eq(portfolios.userId, req.user!.id)
+        where: eq(portfolios.userId, (req.user as any).id)
       });
 
       if (!portfolio) {
         [portfolio] = await db.insert(portfolios)
           .values({ 
             name: "Default Portfolio",
-            userId: req.user!.id
+            userId: (req.user as any).id
           })
           .returning();
       }
@@ -309,22 +309,22 @@ export function registerRoutes(app: Express) {
   });
 
   // Refresh wallet balances
-  app.post("/api/portfolio/refresh-balances", ensureAuthenticated, async (req, res) => {
+  app.post("/api/portfolio/refresh-balances", ensureAuthenticated, async (req: Request, res: Response) => {
     try {
       const portfolio = await db.query.portfolios.findFirst({
-        where: eq(portfolios.userId, req.user!.id),
+        where: eq(portfolios.userId, (req.user as any).id),
         with: {
           wallets: true,
           assets: true
         }
-      }) as Portfolio & { wallets: Wallet[]; assets: Asset[] };
+      });
 
       if (!portfolio) {
         return res.status(404).json({ error: "Portfolio not found" });
       }
 
       const walletsWithBalances = await Promise.allSettled(
-        portfolio.wallets.map(wallet => getWalletBalance(wallet.address, wallet.chain))
+        (portfolio.wallets || []).map((wallet: Wallet) => getWalletBalance(wallet.address, wallet.chain))
       );
 
       const processedWallets = walletsWithBalances.map((result, index) => {

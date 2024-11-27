@@ -90,7 +90,7 @@ let lastFetchTime = 0;
 
 export async function fetchNews() {
   try {
-    // Try status updates first
+    // Use CoinGecko's status updates endpoint for real crypto news
     const response = await fetch(
       `${COINGECKO_API}/status_updates`,
       {
@@ -102,13 +102,13 @@ export async function fetchNews() {
     );
     
     if (!response.ok) {
-      throw new Error('Status updates unavailable');
+      throw new Error('Failed to fetch news');
     }
 
     const data = await response.json();
     
     if (!data.status_updates?.length) {
-      throw new Error('No status updates');
+      return [];
     }
 
     return data.status_updates
@@ -122,20 +122,7 @@ export async function fetchNews() {
       }))
       .slice(0, 10);
   } catch (error) {
-    // Fallback to trending coins as news
-    try {
-      const trending = await fetchTrendingAssets();
-      return trending.map((coin: any) => ({
-        title: `${coin.item.name} (${coin.item.symbol.toUpperCase()}) is Trending`,
-        description: `${coin.item.name} is currently trending with market cap rank #${coin.item.market_cap_rank}`,
-        url: `https://www.coingecko.com/en/coins/${coin.item.id}`,
-        source: 'CoinGecko Trending',
-        categories: ['Trending'],
-        publishedAt: new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error('Error fetching news:', error);
-      return [];
-    }
+    console.error('Error fetching news:', error);
+    return [];
   }
 }

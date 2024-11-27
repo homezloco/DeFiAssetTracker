@@ -90,7 +90,7 @@ let lastFetchTime = 0;
 
 export async function fetchNews() {
   try {
-    // Use CoinGecko's status updates endpoint for real crypto news
+    // Try status updates first
     const response = await fetch(
       `${COINGECKO_API}/status_updates`,
       {
@@ -101,16 +101,22 @@ export async function fetchNews() {
       }
     );
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch news');
+    if (!response.ok || !response.status_updates?.length) {
+      // Fallback to trending if no status updates
+      const trendingResponse = await fetch(`${COINGECKO_API}/search/trending`);
+      const trendingData = await trendingResponse.json();
+      
+      return trendingData.coins.map((coin: any) => ({
+        title: `${coin.item.name} (${coin.item.symbol.toUpperCase()})`,
+        description: `Market Cap Rank: #${coin.item.market_cap_rank}\nPrice: ${coin.item.price_btc.toFixed(8)} BTC`,
+        url: `https://www.coingecko.com/en/coins/${coin.item.id}`,
+        source: 'CoinGecko Trending',
+        categories: ['Trending'],
+        publishedAt: new Date().toISOString()
+      }));
     }
 
     const data = await response.json();
-    
-    if (!data.status_updates?.length) {
-      return [];
-    }
-
     return data.status_updates
       .map((item: any) => ({
         title: item.project?.name || 'Cryptocurrency Update',

@@ -17,11 +17,19 @@ interface TrendingCoin {
 }
 
 function TrendingAssetsList() {
-  const { data: trending, isLoading } = useQuery({
+  const { data: trending, isLoading, error } = useQuery({
     queryKey: ["trending"],
     queryFn: fetchTrendingAssets,
     refetchInterval: 300000
   });
+
+  if (error) {
+    return (
+      <p className="text-sm text-destructive">
+        Unable to load trending assets
+      </p>
+    );
+  }
 
   return (
     <ScrollArea className="h-[100px]">
@@ -31,7 +39,7 @@ function TrendingAssetsList() {
             <Skeleton key={i} className="h-8 w-24" />
           ))
         ) : trending?.coins?.length ? (
-          trending.coins.map((coin) => (
+          trending.coins.map((coin: any) => (
             <Badge 
               key={coin.item.id} 
               variant="secondary" 

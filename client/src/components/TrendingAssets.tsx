@@ -9,18 +9,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface TrendingCoin {
   item: {
     id: string;
-    symbol: string;
+    coin_id: number;
     name: string;
-    price_btc: number;
+    symbol: string;
     market_cap_rank: number;
-  }
+    thumb: string;
+    score: number;
+    price_btc: number;
+  };
+}
+
+interface TrendingResponse {
+  coins: TrendingCoin[];
 }
 
 function TrendingAssetsList() {
-  const { data: trending, isLoading, error } = useQuery({
+  const { data: trendingData, isLoading, error } = useQuery<TrendingResponse>({
     queryKey: ["trending"],
     queryFn: fetchTrendingAssets,
-    refetchInterval: 300000
+    refetchInterval: 300000,
+    retry: 3
   });
 
   if (error) {
@@ -38,18 +46,18 @@ function TrendingAssetsList() {
           Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-8 w-24" />
           ))
-        ) : trending?.coins?.length ? (
-          trending.coins.map((coin: any) => (
+        ) : trendingData?.coins?.length ? (
+          trendingData.coins.map(({ item: coin }) => (
             <Badge 
-              key={coin.item.id} 
+              key={coin.id} 
               variant="secondary" 
               className="flex items-center gap-1"
             >
               <span className="text-xs text-muted-foreground">
-                #{coin.item.market_cap_rank}
+                #{coin.market_cap_rank}
               </span>
-              <span>{coin.item.symbol.toUpperCase()}</span>
-              <span>{Number(coin.item.price_btc).toFixed(8)} BTC</span>
+              <span>{coin.symbol.toUpperCase()}</span>
+              <span>{coin.price_btc.toFixed(8)} BTC</span>
             </Badge>
           ))
         ) : (
@@ -64,15 +72,15 @@ function TrendingAssetsList() {
 
 export default function TrendingAssets() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Trending Assets</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ErrorBoundary>
+    <ErrorBoundary>
+      <Card>
+        <CardHeader>
+          <CardTitle>Trending Assets</CardTitle>
+        </CardHeader>
+        <CardContent>
           <TrendingAssetsList />
-        </ErrorBoundary>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   );
 }

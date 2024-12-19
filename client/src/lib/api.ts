@@ -52,10 +52,14 @@ export async function fetchTrendingAssets() {
       throw new Error(`Failed to fetch trending: ${response.statusText}`);
     }
     const data = await response.json();
-    return data?.coins || [];
+    if (!data?.coins?.length) {
+      console.error('Invalid trending data format:', data);
+      return { coins: [] };
+    }
+    return data; // Return the complete response which includes { coins: [{ item: {...} }] }
   } catch (error) {
     console.error('Error fetching trending:', error);
-    return [];
+    return { coins: [] };
   }
 }
 

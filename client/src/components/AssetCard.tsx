@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PriceChart from "./PriceChart";
+import PriceIndicator from "./PriceIndicator";
+import { useState, useEffect } from "react";
 
 interface AssetCardProps {
   asset: {
@@ -24,9 +26,21 @@ const blockchainColors = {
 };
 
 export default function AssetCard({ asset }: AssetCardProps) {
-  const priceChangeColor = asset.price_change_percentage_24h >= 0 
-    ? "text-green-500"
-    : "text-red-500";
+  const [prevPrice, setPrevPrice] = useState(asset.current_price);
+  const [priceChangeAnimation, setPriceChangeAnimation] = useState<'increase' | 'decrease' | null>(null);
+
+  useEffect(() => {
+    if (asset.current_price !== prevPrice) {
+      setPriceChangeAnimation(asset.current_price > prevPrice ? 'increase' : 'decrease');
+      setPrevPrice(asset.current_price);
+
+      const timer = setTimeout(() => {
+        setPriceChangeAnimation(null);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [asset.current_price, prevPrice]);
 
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow">
@@ -40,13 +54,17 @@ export default function AssetCard({ asset }: AssetCardProps) {
           </div>
           <p className="text-muted-foreground uppercase">{asset.symbol}</p>
         </div>
-        <Badge variant={asset.price_change_percentage_24h >= 0 ? "default" : "destructive"}>
-          {asset.price_change_percentage_24h.toFixed(2)}%
-        </Badge>
+        <PriceIndicator value={asset.price_change_percentage_24h} />
       </div>
 
       <div className="mb-4">
-        <p className="text-2xl font-bold">${asset.current_price.toLocaleString()}</p>
+        <p className={`text-2xl font-bold transition-colors duration-300 ${
+          priceChangeAnimation === 'increase' ? 'text-green-500' :
+          priceChangeAnimation === 'decrease' ? 'text-red-500' :
+          ''
+        }`}>
+          ${asset.current_price.toLocaleString()}
+        </p>
         <p className="text-sm text-muted-foreground">
           Vol: ${asset.volume_24h ? new Intl.NumberFormat('en-US', {
             notation: 'compact',

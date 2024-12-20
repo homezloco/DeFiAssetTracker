@@ -74,7 +74,10 @@ export default function AssetCard({ asset }: AssetCardProps) {
       </div>
 
       <div className="h-[100px]">
-        <PriceChart data={asset.sparkline || []} />
+        <PriceChart 
+          data={asset.sparkline || []} 
+          isPositive={asset.price_change_percentage_24h >= 0}
+        />
       </div>
     </Card>
   );

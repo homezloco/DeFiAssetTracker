@@ -7,20 +7,25 @@ import { ErrorBoundary } from "./ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface TrendingCoin {
-  item: {
-    id: string;
-    coin_id: number;
-    name: string;
-    symbol: string;
-    market_cap_rank: number;
-    thumb: string;
-    score: number;
-    price_btc: number;
+  id: string;
+  coin_id: number;
+  name: string;
+  symbol: string;
+  market_cap_rank: number;
+  thumb: string;
+  score: number;
+  price_btc: number;
+}
+
+interface TrendingItem {
+  item: TrendingCoin & {
+    price_usd: number;
+    price_change_24h: number;
   };
 }
 
 interface TrendingResponse {
-  coins: TrendingCoin[];
+  coins: TrendingItem[];
 }
 
 function TrendingAssetsList() {
@@ -47,17 +52,27 @@ function TrendingAssetsList() {
             <Skeleton key={i} className="h-8 w-24" />
           ))
         ) : trendingData?.coins?.length ? (
-          trendingData.coins.map(({ item: coin }) => (
+          trendingData.coins.map(({ item }) => (
             <Badge 
-              key={coin.id} 
+              key={item.id} 
               variant="secondary" 
-              className="flex items-center gap-1"
+              className={`flex items-center gap-1 ${
+                item.price_change_24h > 0 ? 'bg-green-500/10 text-green-500' :
+                item.price_change_24h < 0 ? 'bg-red-500/10 text-red-500' :
+                ''
+              }`}
             >
               <span className="text-xs text-muted-foreground">
-                #{coin.market_cap_rank}
+                #{item.market_cap_rank}
               </span>
-              <span>{coin.symbol.toUpperCase()}</span>
-              <span>{coin.price_btc.toFixed(8)} BTC</span>
+              <span>{item.symbol.toUpperCase()}</span>
+              <span>${(item.price_usd || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 6
+              })}</span>
+              <span className="text-xs">
+                {(item.price_change_24h || 0).toFixed(1)}%
+              </span>
             </Badge>
           ))
         ) : (

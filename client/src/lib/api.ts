@@ -47,16 +47,40 @@ export async function fetchTopAssets() {
 
 export async function fetchTrendingAssets() {
   try {
-    const response = await fetch(`${COINGECKO_API}/search/trending`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch trending: ${response.statusText}`);
+    // First get trending coins
+    const trendingResponse = await fetch(`${COINGECKO_API}/search/trending`);
+    if (!trendingResponse.ok) {
+      throw new Error(`Failed to fetch trending: ${trendingResponse.statusText}`);
     }
-    const data = await response.json();
-    if (!data?.coins?.length) {
-      console.error('Invalid trending data format:', data);
+    const trendingData = await trendingResponse.json();
+    
+    if (!trendingData?.coins?.length) {
+      console.error('Invalid trending data format:', trendingData);
       return { coins: [] };
     }
-    return data; // Return the complete response which includes { coins: [{ item: {...} }] }
+
+    // Get USD prices for trending coins
+    const coinIds = trendingData.coins.map((coin: any) => coin.item.id).join(',');
+    const priceResponse = await fetch(
+      `${COINGECKO_API}/simple/price?ids=${coinIds}&vs_currencies=usd&include_24hr_change=true`
+    );
+    
+    if (!priceResponse.ok) {
+      throw new Error(`Failed to fetch prices: ${priceResponse.statusText}`);
+    }
+    const priceData = await priceResponse.json();
+
+    // Combine trending and price data
+    return {
+      coins: trendingData.coins.map((coin: any) => ({
+        ...coin,
+        item: {
+          ...coin.item,
+          price_usd: priceData[coin.item.id]?.usd || 0,
+          price_change_24h: priceData[coin.item.id]?.usd_24h_change || 0
+        }
+      }))
+    };
   } catch (error) {
     console.error('Error fetching trending:', error);
     return { coins: [] };
